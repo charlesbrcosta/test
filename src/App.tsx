@@ -1,55 +1,44 @@
-import React, { useMemo, useCallback } from 'react';
-// Importação de Tipos (Seguindo padrão de pastas)
-import type { User } from '../src/features/types'; 
+import { useState, useCallback } from 'react';
+import { UserCard } from './features/user/components/UserCard';
+import { isAdmin, type User } from './features/types';
 
-// 1. Definição de Interface (PascalCase e Tipagem Estrita) 
-interface UserCardProps {
-  user: User;
-  onUpdateStatus: (id: string, status: string) => void;
-  variant?: 'default' | 'highlighted'; // Uso de Union Types
-}
+// Mock inicial seguindo a interface User
+const MOCK_USERS: User[] = [
+  { id: '1', name: 'Alice', email: 'alice@dev.com', role: 'admin', status: 'active' },
+  { id: '2', name: 'Bob', email: 'bob@dev.com', role: 'user', status: 'inactive' },
+];
 
-/**
- * Componente: UserCard
- * Responsabilidade: Exibir informações do usuário e gerenciar ações simples.
- */
-export const UserCard: React.FC<UserCardProps> = ({ 
-  user, 
-  onUpdateStatus, 
-  variant = 'default' 
-}) => {
-  
-  // 2. Lógica Memoizada para Performance (useMemo) 
-  const userSummary = useMemo(() => {
-    return `${user.name} - ${user.role.toUpperCase()}`;
-  }, [user.name, user.role]);
+export default function App() {
+  const [users, setUsers] = useState<User[]>(MOCK_USERS);
 
-  // 3. Handler de eventos com prefixo 'handle'
-  // Uso de useCallback para estabilidade de referência
-  //Uso de handle para padronizar nomes de funções
-  const handleStatusChange = useCallback(() => {
-    const newStatus = user.status === 'active' ? 'inactive' : 'active';
-    onUpdateStatus(user.id, newStatus);
-  }, [user.id, user.status, onUpdateStatus]);
-
-  // 4. Renderização Condicional Limpa
-  if (!user.status) return null;
+  // Handler para atualizar o status respeitando a Imutabilidade 
+  const handleUpdateStatus = useCallback((id: string, newStatus: string) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === id ? { ...user, status: newStatus as 'active' | 'inactive' } : user
+      )
+    );
+  }, []);
 
   return (
-    <div className={`card card--${variant}`}>
-      <h3>{userSummary}</h3>
-      <p>Status: <strong>{user.status}</strong></p>
+    <main className="container">
+      <h1>Gerenciamento de Usuários</h1>
       
-      {/* 5. Composição e Ações */}
-      <button 
-        type="button" 
-        onClick={handleStatusChange}
-        aria-label="Alterar status do usuário" // Acessibilidade (ARIA) 
-      >
-        Alternar Status
-      </button>
-    </div>
-  );
-};
+      <section className="user-grid">
+        {/* Renderização em Lista com Performance Optimization [cite: 19, 63] */}
+        {users.map((user) => (
+          <UserCard
+            key={user.id}
+            user={user}
+            onUpdateStatus={handleUpdateStatus}
+            // Exemplo de lógica condicional para Props:
+            variant={isAdmin(user) ? 'highlighted' : 'default'} 
+          />
+        ))}
+      </section>
 
-// Exportação nomeada para facilitar refatoração e buscas no VS Code
+      {/* Exemplo de Renderização Condicional  */}
+      {users.length === 0 && <p>Nenhum usuário encontrado.</p>}
+    </main>
+  );
+}
