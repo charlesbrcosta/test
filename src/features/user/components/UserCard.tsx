@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 // Importação de Tipos (Seguindo padrão de pastas)
-import type { User } from '../../types'; 
+import type { User } from '../../types';
+//teste 
 
 // 1. Definição de Interface (PascalCase e Tipagem Estrita) 
 interface UserCardProps {
